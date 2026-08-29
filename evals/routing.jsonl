@@ -1,0 +1,27 @@
+{"id":"a01","input":"My agent has a rule saying never use em-dashes and it uses them constantly.","route":"A","note":"canonical A"}
+{"id":"a02","input":"I told it three times in the system prompt to cite sources and it still doesn't.","route":"A","note":"repetition signal = competing/conflict"}
+{"id":"a03","input":"The orchestrator ignores the output format I specified.","route":"A","note":"should reach layer misassignment - schema not prose"}
+{"id":"a04","input":"Why does my agent keep adding comments when the prompt says not to?","route":"A","note":"classic obsolete-guardrail case"}
+{"id":"b01","input":"Can you improve this system prompt?","route":"B","note":"canonical B - no specific failure"}
+{"id":"b02","input":"Should I run GEPA on my classifier prompt?","route":"B","note":"optimizer question routes to headroom first"}
+{"id":"b03","input":"I want to squeeze more accuracy out of this prompt.","route":"B","note":"no named failure = headroom"}
+{"id":"b04","input":"Is DSPy worth setting up for our two-agent pipeline?","route":"B","note":"must also surface coupling test"}
+{"id":"c01","input":"Can you clean up my CLAUDE.md? It's 400 lines.","route":"C","note":"wrong artifact - redirect to /doctor"}
+{"id":"c02","input":"Help me write repo rules for our monorepo.","route":"C","note":"context artifact"}
+{"id":"d01","input":"Write a system prompt for an agent that triages support tickets.","route":"D","note":"canonical D"}
+{"id":"d02","input":"I need a tool description for a calendar search function.","route":"D","note":"D - tool descriptions section"}
+{"id":"d03","input":"Write the delegation prompt for a research subagent.","route":"D","note":"D - four-part contract"}
+{"id":"e01","input":"I've edited this prompt five times and it's worse than where I started.","route":"E","note":"canonical E"}
+{"id":"e02","input":"Each round of refinement fixes one case and breaks another.","route":"E","note":"E - capability decay"}
+{"id":"e03","input":"Claude rewrote my whole prompt and lost half the domain rules.","route":"E","note":"E - context collapse, must name it"}
+{"id":"x01","input":"This orchestrator prompt is too long.","route":"A","note":"AMBIGUOUS: A/B/E all plausible. A is correct - length is a count problem, diagnosable without evals"}
+{"id":"x02","input":"My prompt worked on Sonnet but not on Opus.","route":"B","note":"AMBIGUOUS: model-specificity is a headroom question, not a wording one"}
+{"id":"x03","input":"Add a rule so it stops hallucinating citations.","route":"A","note":"AMBIGUOUS: sounds like D (write a rule) but is A - check layer before adding"}
+{"id":"p01","input":"My agent isn't following instructions, what should I change?","route":"PRECONDITION","note":"no artifact supplied - must ask before diagnosing"}
+{"id":"p02","input":"The prompt regressed. Can you fix it?","route":"PRECONDITION","note":"E needs prior version too - must ask"}
+{"id":"n01","input":"Write me a blog post about prompt engineering.","route":"NONE","note":"negative - skill should not fire"}
+{"id":"n02","input":"Rewrite this paragraph to sound more confident.","route":"NONE","note":"negative - creative/style, not agent prompt"}
+{"id":"n03","input":"What's the best model for summarization?","route":"NONE","note":"negative - model selection, not prompt authoring"}
+{"id":"m01","input":"Write a system prompt for a triage agent. It has to run on both GPT-5.6 and Claude.","route":"D","note":"PORTABILITY: D, but must load portability.md and use Markdown not XML"}
+{"id":"m02","input":"This rule is dead weight on Claude now, can I delete it? We also run GPT-5.6.","route":"E","note":"PORTABILITY: E, must apply the intersection inversion, not delete on one model's evidence"}
+{"id":"m03","input":"We optimized the prompt on Claude and scores dropped on GPT. What happened?","route":"B","note":"PORTABILITY: B, cross-model non-transfer; must not recommend re-optimizing on one model"}
