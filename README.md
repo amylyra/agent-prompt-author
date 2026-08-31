@@ -7,7 +7,18 @@ A Claude Skill for diagnosing and writing system prompts, orchestrator instructi
 3. Rules written for an older model are still firing.
 4. The revision loop has no external verifier, so it optimizes readability instead of behavior.
 
-Skipping straight to "write a better rule" is the default failure mode this skill is built to interrupt. Instead of rewriting on request, it routes through one of six diagnostic tests first: is the file even loaded into context, is optimization worth anything here (a ten-minute check you can price before running), do your agents actually interact (measured, not assumed), is the rule in a layer that can enforce it, and can anything fail — since a prompt with no runnable check optimizes for "looks done" instead of correctness.
+Skipping straight to "write a better rule" is the default failure mode this skill is built to interrupt. It routes to a diagnosis before it writes anything, across six routes:
+
+| | |
+|---|---|
+| **A** enforcement | a rule is ignored — is it even loaded, is it competing, is it in a layer that can enforce it |
+| **B** headroom | is optimization worth anything here at all, on a ten-minute check you can price before running |
+| **C** wrong artifact | it is a `CLAUDE.md` or repo rules file, which takes the opposite policy |
+| **D** authoring | a prompt that does not exist yet |
+| **E** revision | it got worse after editing |
+| **F** audit | is this built correctly — a reading, where B is a measurement |
+
+Only the matched route's reference file loads, so a diagnosis costs one file rather than the whole skill.
 
 Full writeup: [Prompt Engineering Best Practices in 2026: Why the Advice Contradicts Itself](https://www.amyzyuan.com/thoughts/prompt-engineering-best-practices-2026)
 

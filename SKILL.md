@@ -17,11 +17,11 @@ Skipping to "write a better rule" is the default failure mode of this task.
 ## Precondition
 
 **Always name the route.** Routing is done from what the user said and never
-needs the artifact. Route D needs nothing further at all — a prompt that does
-not exist yet has no text to ask for.
+needs the artifact.
 
 **Do not diagnose from description alone.** What needs the artifact is the
-FINDING, not the route. On A, B, C, and E, before you produce one, get:
+FINDING. Route D is the one exception — a prompt that does not exist yet has no
+text to ask for. On every other route, before you produce a finding, get:
 
 - The actual artifact text, or the assembled context if the artifact is templated.
 - One concrete failure — the input, what happened, what should have happened.
@@ -43,7 +43,7 @@ Match the request, then read **only** that route's file.
 | "Should I run GEPA / DSPy / an optimizer" | **B**, then D | `references/route-b-headroom.md` |
 | "Write a prompt for [new agent / subagent / tool]" | **D — Authoring** | `references/route-d-authoring.md` |
 | "It regressed after editing" / "each round makes it worse" | **E — Revision** | `references/route-e-revision.md` |
-| It's a CLAUDE.md, repo rules file, or ambient skill | **C — Wrong artifact** | Below. Do not read further |
+| It's a CLAUDE.md, repo rules file, or ambient skill | **C — Wrong artifact** | The section below. No route file |
 
 Length routes to A, not B. Line count is a rule-count problem, and Route A step 2 measures it — no eval set required.
 
@@ -56,6 +56,7 @@ drop is B, write something new is D — then read `references/portability.md`
 alongside that route, because several of its rules invert. A bare behaviour
 difference with no ask attached is B: you cannot tell whether the prompt is the
 bottleneck on either model until you have measured on both.
+
 Read `references/evidence.md` only when a user challenges a claim or asks for sources.
 
 ## Route C — wrong artifact class
@@ -120,4 +121,4 @@ The standing question for any existing prompt is not *what rule is missing* but 
 
 ---
 
-*Written August 2026 against Claude Opus 5 / Fable 5-generation behavior. Every number in this skill is sourced in `references/evidence.md`. Re-check the numbers against a current model before treating them as thresholds.*
+*Written August 2026 against the Claude 5 generation — Opus 5, Sonnet 5, Fable 5. Every number in this skill is sourced in `references/evidence.md`. Re-check the numbers against a current model before treating them as thresholds.*

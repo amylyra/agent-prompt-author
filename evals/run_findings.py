@@ -185,14 +185,19 @@ def report(r):
         print(f"      {i}")
 
     ok = True
-    # Gate on the stable signals only. Recall swung 25-50 points across three
-    # runs of an unchanged skill, so thresholding it would fail at random; it is
-    # reported as a band and a diagnostic instead. `invented` is also ungated:
-    # the grounded judge and the recall judge disagreed about the same finding
-    # string, so it is not yet trustworthy enough to block on.
-    if len(r["missed"]) > r["max_missed"]:
-        print(f"  FAIL {len(r['missed'])} defect(s) missed by every run "
-              f"(allowed {r['max_missed']}) — a class the route does not cover"); ok = False
+    # Only `absent` is gated, and only because it earned it: 12/12 correct
+    # across three separate 3-run measurements. Everything else here moved.
+    #
+    # `missed` looked stable until it wasn't. At 3 runs a class the skill finds
+    # a third of the time is missed by all three about a third of the time, so
+    # "missed by every run" reshuffles between classes on an unchanged skill —
+    # it did, twice. It is a good diagnostic and a bad gate at this run count.
+    # Raising --runs to 5 or more is what would make it gateable; that is cheap
+    # against the API and was not affordable through the CLI proxy used to
+    # calibrate this. Until someone does it, read it, do not block on it.
+    if r["missed"]:
+        print(f"  note  missed by all {r['runs']} runs: {', '.join(r['missed'])}. "
+              f"Diagnostic, not a gate — re-run at --runs 5 before acting on it")
     lo, hi = r["expect_recall"] or (0, 1)
     if r["recall"] is not None and not (lo <= r["recall"] <= hi):
         print(f"  note  recall {r['recall']:.0%} outside the {lo:.0%}-{hi:.0%} band "
