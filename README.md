@@ -17,7 +17,7 @@ Full writeup: [Prompt Engineering Best Practices in 2026: Why the Advice Contrad
 - `references/` — one file per route: enforcement, headroom, authoring, revision, audit, portability across model families, and sourced evidence for every claim
 - `scripts/headroom_test.py` — runs candidate prompts against a held-out case set and returns a go/no-go on whether optimization has anything to find
 - `scripts/test_headroom.py` — checks that go/no-go against a simulated world with no headroom in it, because a decision rule nobody tested is the failure this skill is about
-- `evals/` — a routing regression harness, 42 labeled cases plus a 6-case unburned holdout, scored on two independent dimensions (which route, and whether the artifact must be requested), so edits to the skill are checked against regressions instead of judged by feel
+- `evals/` — two harnesses. `run_routing.py` scores which route the skill picks, over 42 labeled cases plus a 6-case unburned holdout, on two independent dimensions. `run_findings.py` scores whether the audit Route F produces is actually right, against fixtures with defects planted on purpose. Routing correctly says nothing about diagnosing correctly, which is why there are two
 
 ## Install
 
@@ -53,7 +53,8 @@ Three of the scripts talk to the API and two do not.
 | | Needs a key | What it costs |
 |---|---|---|
 | `scripts/headroom_test.py` | **yes** | ~$2 at `--effort low`, ~$5 at `high` — derive it, see `references/route-b-headroom.md` |
-| `evals/run_routing.py` | **yes** | ~$1 for a 39-case, 3-run pass |
+| `evals/run_routing.py` | **yes** | ~$1 for a 42-case, 3-run pass |
+| `evals/run_findings.py` | **yes** | ~$2 for both fixtures at 3 runs |
 | `scripts/test_headroom.py` | no | free, offline, stubbed |
 
 Route F, the audit, needs neither a key nor a script — it is a reading procedure the model runs on your prompt.

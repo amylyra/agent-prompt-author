@@ -82,6 +82,10 @@ unnecessary:
   that undertriggered. Make blanket defaults conditional
 - "After every N tool calls, summarise progress" — the model narrates readily now
 - Any rule telling the model not to think — measurably increases tag leakage
+- "Make sure to", "be sure to", "remember to", "it is important that" — the
+  meta-instruction family, the strongest measured-*negative* edit family there is.
+  Either the model already does it, or the phrasing is a symptom of an upstream
+  problem. Rewrite as the plain instruction or cut it
 - Prefilled turns, `budget_tokens`, `temperature` on Sonnet 5 — removed or 400 now
 
 And what this generation needs that older ones inferred: scope limits, explicit output
@@ -125,10 +129,48 @@ Intermittent compliance is the signature.
   this was followed?* If not, rewrite it or demote it to an aspiration. "Be insightful"
   fails; "if the user's premise is materially questionable, test it before solving the
   downstream problem" passes.
-- **Wrong layer.** Walk Route A's ladder — schema, enum, tool description, hook.
-  Prompting around a schema or around a permission boundary are both this.
+- **Wrong layer.** The highest-yield class and the easiest to read past, because a
+  misplaced rule is usually written correctly — it is just in prose. Check every rule
+  against this table before moving on:
+
+  | The rule says | It belongs in |
+  |---|---|
+  | Return valid JSON / these fields / this shape | Output schema |
+  | Exactly one of a fixed set of values | Enum |
+  | Which tool to use, or when to use it | Tool description |
+  | Under N words, at most N items | `max_tokens` or a linter |
+  | Never take \<side-effecting action> without \<check> | Hook or an authorization boundary outside the model |
+  | Match our tone / house style | Rubric plus a verifier in a separate context |
+
+  Prompting around a schema and prompting around a permission are both this class,
+  and the permission one is the dangerous half: a request is not a control.
 - **Examples added as cargo cult.** They cost context and narrow behaviour to the
   space they demonstrate. Route D rule 5 has the bar they have to clear.
+
+## Filter at the end, never while reading
+
+**Find first, at full coverage.** Passes 1–4 are a sweep: write down everything,
+including what you are unsure about. Do not weigh importance while reading — a
+conservatism instruction applied during the sweep gets followed faithfully and you
+lose real defects without noticing. This is measured behaviour on current models, not
+a stylistic preference.
+
+**Then drop these from the list before reporting.** This filter applies only to gaps
+you are about to *invent*. It says nothing about defects you *found in the text* — a
+speculative guard written in the prompt is a finding, always, and so is an
+unmeasurable rule or a stale scaffold. The two are opposite directions.
+
+- **Unhandled hypotheticals.** "No fallback if the lookup fails", "does not cover a
+  three-way tie". You would delete these as speculative guards if the prompt had them;
+  do not add them as gaps because it doesn't.
+- **Missing content with no evidence it is needed.** A prompt is not defective for
+  omitting a rule nobody has needed yet.
+- **Anything true of almost any prompt.** If the finding does not quote this
+  artifact's text, it is filler.
+
+A *gap* is only a finding when the prompt already implies the behaviour and leaves it
+unspecified: a rule that cannot be satisfied under the stated boundaries, a decision
+it asks for without giving the vocabulary to make, a tie it creates and never breaks.
 
 ## Report
 

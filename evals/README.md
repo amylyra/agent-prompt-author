@@ -153,8 +153,9 @@ should have triggered this skill and the ones that shouldn't have.
 
 Honest limits, so nobody mistakes a green run for a working skill:
 
-- **Whether the finding is correct.** Routing to A does not mean the diagnosis
-  within A is right.
+- ~~**Whether the finding is correct.**~~ This is what `run_findings.py` now does,
+  for Route F. Routing to A still does not mean the diagnosis within A is right —
+  A, B, D and E have no finding-level harness yet.
 - **Whether the output contract is followed.** Needs a second harness scoring
   block presence — or better, a `Stop` hook, since a format request is the
   weakest instruction form available.
@@ -169,10 +170,87 @@ Honest limits, so nobody mistakes a green run for a working skill:
   crowded skill list; `/doctor` diagnoses that, this does not.
 - **Prose quality of the deltas.** Not scored, and probably not worth scoring.
 
+## The second harness: run_findings.py
+
+`run_routing.py` scores which route the skill picks. That is the cheap half —
+routing correctly to F says nothing about whether the audit that follows is any
+good. `run_findings.py` scores the finding.
+
+```bash
+python run_findings.py                       # both fixtures, 3 runs each
+python run_findings.py --fixture clean-triage.md
+python run_findings.py --snapshot base.json  # then --compare base.json
+```
+
+Fixtures in `fixtures/` carry defects planted on purpose. `findings.jsonl` lists
+them. Two numbers come out, and you need both:
+
+- **recall** — of the planted defects, how many did the audit report?
+- **invented** — of the findings it reported, how many are not true of the text?
+
+Recall alone gets you an audit that reports nine things about everything.
+
+### Read the spread before you believe the number
+
+Each fixture runs three times and the spread is reported, because **recall on an
+unchanged skill and an unchanged fixture moved 42–75% across runs** — a 25 to 50
+point spread depending on the fixture. That was discovered the hard way, after
+three rounds of "improving" Route F against single-run scores. Two of those
+rounds were measuring nothing.
+
+A defect is `missed` only when **every** run missed it, and `flaky` when some
+runs found it. The distinction is the useful output: on the last calibration,
+1 of 12 defects was truly missed and 6 were flaky. Those need opposite fixes — a
+missed class is absent from the route, a flaky one is present but not salient
+enough to land reliably.
+
+### What this gates on, and what it only reports
+
+| Signal | Stable? | Gated |
+|---|---|---|
+| Defects missed by every run | yes | **yes** — a class the route does not cover |
+| `absent` classes falsely claimed | yes, 4/4 every run | **yes** |
+| Mean recall | no, 25–50 pt spread | reported as a band |
+| `invented` count | no, see below | reported only |
+
+Thresholding a number with a 25-point spread is a coin flip dressed as a test,
+which is the failure this whole repository is about. So the gates are on the two
+signals that held across every run measured, and recall is a diagnostic band.
+
+### The graders disagree with each other
+
+`invented` is not gated because it is not yet trustworthy. On the last run the
+recall judge credited the audit with finding the planted `enum-mismatch` defect,
+and the grounded judge called *the same finding string* untrue of the prompt.
+Both cannot be right.
+
+The grounded judge is also asking the wrong question — *is this claim true* — so
+a grounded nitpick passes and materiality goes unmeasured. Fixing this needs a
+better-specified judge prompt and a calibration set of its own, which is a
+harness for the harness. Until then, read `invented` by hand.
+
+This is a model judging a model, and it is the weakest part of the setup. It is
+still better than the alternative here, which was judging by feel.
+
+### The negative control is `absent`, not silence
+
+`clean-triage.md` was written to be defect-free and is not. Three attempts, and
+each repair introduced a new real defect — one of them caused directly by fixing
+the previous round's finding, which is retrospective capability decay happening
+in a prompt rather than a model. Writing a clean prompt is harder than auditing
+one.
+
+So it is scored both ways: positive for the four subtle defects it actually has,
+and negative through an `absent` list — loud classes it demonstrably does not
+have (over-budget, meta-instructions, speculative guards, unhandled
+hypotheticals) that the audit must not claim. "Expect silence" was the wrong
+instrument. Absence of named classes is falsifiable and cannot be gamed by
+writing a better fixture.
+
 ## Next case sets, in priority order
 
-1. **Contract compliance** — does the output carry all five blocks? Cheap to
-   score by regex, and it is the most-likely-to-drift behavior.
+1. **Finding harnesses for A, B, D and E.** Route F has one now; the others do
+   not, and the same fixture-with-planted-defects pattern extends to them.
 2. **Finding class within Route A** — given a prompt with a known defect
    (competing count, conflict, wrong layer, obsolete), does it find that one?
    Requires fixture prompts, which is real work, but it is the test that
