@@ -79,10 +79,10 @@ reliably has headroom.
 
 ## The case set
 
-`routing.jsonl` — 39 cases. Every case carries **two** labels, `route` and
+`routing.jsonl` — 42 cases, plus 6 more in `holdout.jsonl`. Every case carries **two** labels, `route` and
 `ask`, scored independently:
 
-- `route` — one of A, B, C, D, E, NONE.
+- `route` — one of A, B, C, D, E, F, NONE.
 - `ask` — must the skill request the artifact before it can give a finding?
 
 **These are independent, and conflating them is the trap.** An earlier version of
@@ -120,9 +120,24 @@ Five kinds of case, all of which matter:
   80% → 90% while the tuned set measured 98%. That ~8-point gap is the honest cost
   of five rounds against one case set, and it is why they are labelled.
 
-**h01–h10 are now burned.** They are in the file, so the next person editing this
-skill is training on them. Mine ten fresh ones from real sessions before the next
-change and hold *those* back; a held-out set is a consumable, not a fixture.
+- **Audit** (b05, f01–f03) — "review this", "is this any good", "how much of this is
+  still needed". They route to F, not B: F reads the artifact, B measures it, and
+  someone asking for a review generally has no eval set for B to use. b05 was
+  labelled B until Route F existed, which is why it is in this group rather than
+  with the gaps.
+
+**h01–h10 are burned.** They are in `routing.jsonl` now, so the next person editing
+this skill is training on them. `holdout.jsonl` (g01–g06) is the current unburned
+set — six cases written after Route F was finished, including two controls that
+check whether adding a route pulled the others toward it. Point the harness at it:
+
+```bash
+python run_routing.py --cases holdout.jsonl
+```
+
+A held-out set is a consumable, not a fixture. Burn `holdout.jsonl` on the next
+change and mine fresh cases from real sessions; invented ones encode the author's
+theory of what users say.
 
 Known miss: **h03** ("we're on GPT-5.6 and Claude Sonnet 5, should we keep the
 'be concise' instruction?") routes to B, should be E. It is a deletion decision
@@ -143,6 +158,12 @@ Honest limits, so nobody mistakes a green run for a working skill:
 - **Whether the output contract is followed.** Needs a second harness scoring
   block presence — or better, a `Stop` hook, since a format request is the
   weakest instruction form available.
+- **Whether a reference file is any good.** The probe feeds the model `SKILL.md`
+  alone, so a green run on `f01` proves the routing table sends audits to Route F —
+  not that `route-f-audit.md` gives good advice once it loads. Every reference file
+  in this repo is unmeasured in that sense. Scoring the content needs fixture prompts
+  with known defects and a check that the right defect comes back, which is the
+  "finding class" harness listed below.
 - **Whether the skill triggers in a real session.** This probe hands the skill
   to the model directly. Real triggering is description matching against a
   crowded skill list; `/doctor` diagnoses that, this does not.

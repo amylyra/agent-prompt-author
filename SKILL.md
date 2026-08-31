@@ -1,6 +1,6 @@
 ---
 name: agent-prompt-author
-description: Write, revise, and diagnose system prompts, orchestrator instructions, subagent delegation contracts, tool descriptions, and harness text for LLM agents you build and ship. Use whenever someone wants an agent to behave differently by changing its text — "write a system prompt for X", "improve this orchestrator prompt", "my agent keeps ignoring this rule", "the prompt got worse after I edited it", "add a constraint so it stops doing Y", "write a tool description", "should I run GEPA or DSPy on this", "review this agent prompt". Also use when a prompt has grown past ~200 lines, when a refinement loop has stopped helping, or before investing in automated prompt optimization. Do NOT use for one-off chat prompts, for CLAUDE.md and repo context files (opposite policy — see Route C), or for brand voice and creative style guides.
+description: Write, revise, and diagnose system prompts, orchestrator instructions, subagent delegation contracts, tool descriptions, and harness text for LLM agents you build and ship. Use whenever someone wants an agent to behave differently by changing its text — "write a system prompt for X", "improve this orchestrator prompt", "my agent keeps ignoring this rule", "the prompt got worse after I edited it", "add a constraint so it stops doing Y", "write a tool description", "should I run GEPA or DSPy on this", "review this agent prompt", "is this prompt any good", "how much of this is still needed". Also use when a prompt has grown past ~200 lines, when a refinement loop has stopped helping, or before investing in automated prompt optimization. Do NOT use for one-off chat prompts, for CLAUDE.md and repo context files (opposite policy — see Route C), or for brand voice and creative style guides.
 ---
 
 # Agent Prompt Author
@@ -38,13 +38,16 @@ Match the request, then read **only** that route's file.
 | What they said | Route | Read |
 |---|---|---|
 | "It ignores this rule" / "it won't stop doing X" / it has grown past ~200 lines | **A — Enforcement** | `references/route-a-enforcement.md` |
-| "Improve / optimize / review this prompt" (no specific failure) | **B — Headroom** | `references/route-b-headroom.md` |
+| "Improve / optimize this prompt" — they want it to score better | **B — Headroom** | `references/route-b-headroom.md` |
+| "Review this prompt" / "is this any good" / "what's still needed here" | **F — Audit** | `references/route-f-audit.md` |
 | "Should I run GEPA / DSPy / an optimizer" | **B**, then D | `references/route-b-headroom.md` |
 | "Write a prompt for [new agent / subagent / tool]" | **D — Authoring** | `references/route-d-authoring.md` |
 | "It regressed after editing" / "each round makes it worse" | **E — Revision** | `references/route-e-revision.md` |
 | It's a CLAUDE.md, repo rules file, or ambient skill | **C — Wrong artifact** | Below. Do not read further |
 
 Length routes to A, not B. Line count is a rule-count problem, and Route A step 2 measures it — no eval set required.
+
+**B and F are not the same question.** F asks whether the prompt is built correctly and needs nothing but the text. B asks whether it performs and is unanswerable without cases. When someone says "review this" with no eval set, they are asking for F; offering them B is how this skill dead-ends.
 
 **A cross-model symptom is a modifier, not a route.** "Works on Claude, not on
 GPT" reads like non-compliance and pulls toward A. It usually isn't. Route on

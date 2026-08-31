@@ -23,7 +23,7 @@ except ImportError:
     sys.exit("pip install anthropic")
 
 SKILL = Path(__file__).resolve().parent.parent
-ROUTES = ["A", "B", "C", "D", "E", "NONE"]
+ROUTES = ["A", "B", "C", "D", "E", "F", "NONE"]
 # Two labels out. High effort here bills thinking tokens for a classification.
 EFFORT = "low"
 
@@ -54,8 +54,10 @@ def load_skill(exclude=None):
     return text
 
 
-def cases():
-    return [json.loads(l) for l in open(Path(__file__).parent / "routing.jsonl") if l.strip()]
+def cases(path=None):
+    """Defaults to the tuned set. Point --cases at holdout.jsonl to measure the
+    train-test gap, and never tune against whatever you point it at."""
+    return [json.loads(l) for l in open(path or Path(__file__).parent / "routing.jsonl") if l.strip()]
 
 
 def probe(client, model, skill_text, case):
@@ -98,12 +100,13 @@ def main():
     p.add_argument("--snapshot")
     p.add_argument("--compare")
     p.add_argument("--ablate", action="store_true")
+    p.add_argument("--cases", help="case file; defaults to evals/routing.jsonl")
     a = p.parse_args()
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         sys.exit("set ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(max_retries=5)
-    cs = cases()
+    cs = cases(a.cases)
     skill_text = load_skill()
 
     if a.ablate:
