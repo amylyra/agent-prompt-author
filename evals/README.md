@@ -70,7 +70,7 @@ A skill's outputs are mostly prose, which is expensive to score and easy to
 score wrongly. But two of its outputs are **labels**:
 
 - which route it took
-- which finding class it reached
+- whether it asked for the artifact before diagnosing
 
 Labels score exactly. Scoring the label instead of the prose is what makes this
 harness cheap enough to run on every edit — and route classification is a
@@ -79,16 +79,43 @@ reliably has headroom.
 
 ## The case set
 
-`routing.jsonl` — 24 cases across four kinds. All four kinds matter:
+`routing.jsonl` — 29 cases. Every case carries **two** labels, `route` and
+`ask`, scored independently:
+
+- `route` — one of A, B, C, D, E, NONE.
+- `ask` — must the skill request the artifact before it can give a finding?
+
+**These are independent, and conflating them is the trap.** An earlier version of
+this harness scored `PRECONDITION` as a seventh route, which made "routes to A"
+and "needs the artifact first" mutually exclusive answers to one question. They
+never were. Measured on the same skill and the same cases, the one-dimensional
+probe scored 34.5% and the two-dimensional one 75.9% before any skill edit — a
+41-point gap that was purely an artifact of the label set, with 20 of 29 cases
+answering PRECONDITION instead of routing. If you extend this harness, keep asking
+whether a new label is a value of an existing dimension or a dimension of its own.
+
+*Those numbers came from a `claude -p` proxy on Claude Sonnet 5, not the API path
+this script uses, so a local `CLAUDE.md` was in context throughout. The confound is
+constant across the compared conditions, so the deltas hold; treat the absolute
+percentages as approximate until re-run through `run_routing.py` with an API key.*
+
+Five kinds of case, all of which matter:
 
 - **Canonical** (a01–e03) — unambiguous cases for each route. Catch gross breakage.
 - **Ambiguous** (x01–x03) — cases where two or three routes are defensible. These
   are where the skill actually fails, and where every edit should be checked.
-- **Precondition** (p01–p02) — a symptom described with no artifact supplied. The
-  skill must ask before diagnosing. This guards against the exact failure the
-  skill was written to prevent.
+- **Precondition** (p01–p02) — a symptom described with no artifact supplied. These
+  route like any other case; what makes them precondition cases is `ask: true`.
+  They guard against the exact failure the skill was written to prevent.
 - **Negative** (n01–n03) — the skill should not fire. Without these, you optimize
   toward a skill that fires on everything.
+- **Portability** (m01–m03) — the artifact targets more than one model family, so
+  the route is right only if `portability.md` loads with it. m02 is the one that
+  matters: deletion inverts to the intersection of what is safe across models, and
+  a skill that misses it gives confidently wrong advice. **Currently the weakest
+  group** — m02 and m03 both misroute. Unfixed, and the first thing to work on.
+- **Gap** (a05, b05) — triggers the description promises that the routing table
+  did not cover. Both misrouted until the table rows were widened to match.
 
 **Replace these with your own.** Cases drawn from real requests beat invented
 ones, because invented cases encode the author's theory of what users say rather

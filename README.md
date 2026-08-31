@@ -16,11 +16,29 @@ Full writeup: [Prompt Engineering Best Practices in 2026: Why the Advice Contrad
 - `SKILL.md` — the skill definition and routing table
 - `references/` — one file per route: enforcement, headroom, authoring, revision, portability across model families, and sourced evidence for every claim
 - `scripts/headroom_test.py` — runs candidate prompts against a held-out case set and returns a go/no-go on whether optimization has anything to find
+- `scripts/test_headroom.py` — checks that go/no-go against a simulated world with no headroom in it, because a decision rule nobody tested is the failure this skill is about
 - `evals/` — a routing regression harness with 24 labeled cases (canonical, ambiguous, precondition, negative), so edits to the skill are checked against regressions instead of judged by feel
 
 ## Install
 
-Drop this directory into `.claude/skills/agent-prompt-author/` in a project, or wherever your Claude setup loads skills from.
+**Skills CLI** — Claude Code, Cursor, Windsurf, VS Code, JetBrains. Node 18+.
+
+```bash
+npx skills add amylyra/agent-prompt-author -g
+```
+
+Drop `-g` to install into the current project instead of globally.
+
+**Claude Code plugin marketplace**
+
+```
+/plugin marketplace add amylyra/skills-marketplace
+/plugin install agent-prompt-author@amy-skills
+```
+
+**Manual** — drop this directory into `.claude/skills/agent-prompt-author/` in a project, or wherever your Claude setup loads skills from.
+
+**claude.ai** — Settings → Capabilities → Skills, upload a `.zip` of this folder with the folder as the zip root. Needs Pro, Max, Team, or Enterprise with code execution enabled.
 
 ## Improving it
 

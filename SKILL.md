@@ -16,7 +16,12 @@ Skipping to "write a better rule" is the default failure mode of this task.
 
 ## Precondition
 
-**Do not diagnose from description alone.** Before any route except D, get:
+**Always name the route.** Routing is done from what the user said and never
+needs the artifact. Route D needs nothing further at all — a prompt that does
+not exist yet has no text to ask for.
+
+**Do not diagnose from description alone.** What needs the artifact is the
+FINDING, not the route. On A, B, C, and E, before you produce one, get:
 
 - The actual artifact text, or the assembled context if the artifact is templated.
 - One concrete failure — the input, what happened, what should have happened.
@@ -24,7 +29,7 @@ Skipping to "write a better rule" is the default failure mode of this task.
 - **Which model families the artifact must run on.** If more than one, read
   `references/portability.md` alongside your route — several rules invert.
 
-If the user describes a symptom without producing the artifact, ask for it once, plainly. A diagnosis built on a description of a prompt is a guess about a class of prompts, not a finding about theirs.
+If the user describes a symptom without producing the artifact, name the route, then ask for it once, plainly. A diagnosis built on a description of a prompt is a guess about a class of prompts, not a finding about theirs.
 
 ## Route
 
@@ -32,12 +37,14 @@ Match the request, then read **only** that route's file.
 
 | What they said | Route | Read |
 |---|---|---|
-| "It ignores this rule" / "it won't stop doing X" | **A — Enforcement** | `references/route-a-enforcement.md` |
-| "Improve / optimize this prompt" (no specific failure) | **B — Headroom** | `references/route-b-headroom.md` |
+| "It ignores this rule" / "it won't stop doing X" / it has grown past ~200 lines | **A — Enforcement** | `references/route-a-enforcement.md` |
+| "Improve / optimize / review this prompt" (no specific failure) | **B — Headroom** | `references/route-b-headroom.md` |
 | "Should I run GEPA / DSPy / an optimizer" | **B**, then D | `references/route-b-headroom.md` |
 | "Write a prompt for [new agent / subagent / tool]" | **D — Authoring** | `references/route-d-authoring.md` |
 | "It regressed after editing" / "each round makes it worse" | **E — Revision** | `references/route-e-revision.md` |
 | It's a CLAUDE.md, repo rules file, or ambient skill | **C — Wrong artifact** | Below. Do not read further |
+
+Length routes to A, not B. Line count is a rule-count problem, and Route A step 2 measures it — no eval set required.
 
 Read `references/portability.md` when the artifact targets more than one model family.
 Read `references/evidence.md` only when a user challenges a claim or asks for sources.
