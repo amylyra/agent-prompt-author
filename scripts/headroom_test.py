@@ -22,7 +22,8 @@ This one reports it in 1 of 12. See scripts/test_headroom.py.
 
 Usage:
     python headroom_test.py --cases cases.jsonl --candidates candidates.txt \
-        [--runs 3] [--confirm 3] [--model claude-sonnet-5] [--threshold 2.0]
+        [--runs 3] [--confirm 3] [--model claude-sonnet-5] [--effort low] \\
+        [--threshold 2.0]
 
 cases.jsonl      one JSON object per line: {"input": str, "expected": str}
 candidates.txt   candidate prompts separated by a line containing only '---'
@@ -75,7 +76,7 @@ def score(output, expected):
     return 1.0 if normalize(output) == normalize(expected) else 0.0
 
 
-def run_case(client, model, system, case):
+def run_case(client, model, system, case, effort):
     """Returns a score, or None if the call failed.
 
     None is not zero. A rate-limit or a network blip is missing data, and
@@ -87,6 +88,7 @@ def run_case(client, model, system, case):
         r = client.messages.create(
             model=model, max_tokens=1024,
             system=system if system else anthropic.NOT_GIVEN,
+            output_config={"effort": effort},
             messages=[{"role": "user", "content": case["input"]}],
         )
         text = "".join(b.text for b in r.content if b.type == "text")
@@ -96,10 +98,10 @@ def run_case(client, model, system, case):
         return None
 
 
-def evaluate(client, model, system, cases, workers=8):
+def evaluate(client, model, system, cases, effort, workers=8):
     """Returns (per_case, mean_over_scored, n_failed)."""
     with ThreadPoolExecutor(max_workers=workers) as ex:
-        per_case = list(ex.map(lambda c: run_case(client, model, system, c), cases))
+        per_case = list(ex.map(lambda c: run_case(client, model, system, c, effort), cases))
     scored = [s for s in per_case if s is not None]
     failed = len(per_case) - len(scored)
     if not scored:
@@ -107,11 +109,11 @@ def evaluate(client, model, system, cases, workers=8):
     return per_case, 100.0 * sum(scored) / len(scored), failed
 
 
-def repeat(client, model, system, cases, runs, label):
+def repeat(client, model, system, cases, runs, label, effort):
     """Run the same prompt `runs` times. Returns (mean, spread, sd)."""
     means = []
     for i in range(runs):
-        _, mean, failed = evaluate(client, model, system, cases)
+        _, mean, failed = evaluate(client, model, system, cases, effort)
         means.append(mean)
         note = f"  ({failed} calls failed, excluded)" if failed else ""
         print(f"  {label} run {i+1}: {mean:.1f}{note}")
@@ -127,6 +129,11 @@ def main():
     p.add_argument("--model", default="claude-sonnet-5")
     p.add_argument("--runs", type=int, default=3,
                    help="repeats for the baseline and for the confirmation stage")
+    p.add_argument("--effort", default="low",
+                   choices=["low", "medium", "high", "xhigh", "max"],
+                   help="output_config.effort. Defaults to low: this is a short-output "
+                        "scoring call and the API default of high bills thinking tokens "
+                        "you do not need. Raise it only if the ranking changes.")
     p.add_argument("--confirm", type=int, default=3,
                    help="how many top screened candidates get confirmation runs")
     p.add_argument("--threshold", type=float, default=2.0,
@@ -142,18 +149,20 @@ def main():
     client = anthropic.Anthropic(max_retries=5)
     cases = load_cases(args.cases)
     candidates = load_candidates(args.candidates)
-    print(f"{len(cases)} cases, {len(candidates)} candidates, model {args.model}\n")
+    calls = len(cases) * (args.runs + len(candidates) + min(args.confirm, len(candidates)) * args.runs)
+    print(f"{len(cases)} cases, {len(candidates)} candidates, model {args.model}, "
+          f"effort {args.effort}\n{calls} calls total\n")
 
     # Noise floor: repeat the zero-shot baseline and measure the spread.
     print(f"baseline x{args.runs} (measuring noise floor)")
-    baseline, noise, base_sd = repeat(client, args.model, "", cases, args.runs, "baseline")
+    baseline, noise, base_sd = repeat(client, args.model, "", cases, args.runs, "baseline", args.effort)
     print(f"  baseline {baseline:.1f}, spread {noise:.1f} pts, sd {base_sd:.1f}\n")
 
     # Stage 1 — screen. One run each; enough to rank, not enough to decide.
     print(f"stage 1: screening {len(candidates)} candidates (1 run each)")
     results = []
     for i, cand in enumerate(candidates, 1):
-        per_case, mean, failed = evaluate(client, args.model, cand, cases)
+        per_case, mean, failed = evaluate(client, args.model, cand, cases, args.effort)
         results.append({"i": i, "mean": mean, "per_case": per_case, "prompt": cand})
         note = f"  [{failed} failed]" if failed else ""
         print(f"  {i:>2}: {mean:5.1f}  ({mean - baseline:+.1f}){note}  {cand[:52]}...")
@@ -168,7 +177,7 @@ def main():
     print(f"\nstage 2: confirming top {k} on fresh runs (x{args.runs} each)")
     for r in results[:k]:
         r["confirmed"], _, r["sd"] = repeat(
-            client, args.model, r["prompt"], cases, args.runs, f"  #{r['i']}")
+            client, args.model, r["prompt"], cases, args.runs, f"  #{r['i']}", args.effort)
 
     confirmed_pool = sorted(results[:k], key=lambda r: -r["confirmed"])
     best = confirmed_pool[0]

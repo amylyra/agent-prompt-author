@@ -24,6 +24,8 @@ except ImportError:
 
 SKILL = Path(__file__).resolve().parent.parent
 ROUTES = ["A", "B", "C", "D", "E", "NONE"]
+# Two labels out. High effort here bills thinking tokens for a classification.
+EFFORT = "low"
 
 PROBE = """You have the skill below available. A user sends the message in <request>.
 
@@ -61,7 +63,7 @@ def probe(client, model, skill_text, case):
     a request can route cleanly and still need the artifact before a finding."""
     try:
         r = client.messages.create(
-            model=model, max_tokens=24,
+            model=model, max_tokens=24, output_config={"effort": EFFORT},
             messages=[{"role": "user", "content": PROBE.format(skill=skill_text, req=case["input"])}],
         )
         out = "".join(b.text for b in r.content if b.type == "text").upper()

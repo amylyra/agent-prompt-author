@@ -79,7 +79,7 @@ reliably has headroom.
 
 ## The case set
 
-`routing.jsonl` — 29 cases. Every case carries **two** labels, `route` and
+`routing.jsonl` — 39 cases. Every case carries **two** labels, `route` and
 `ask`, scored independently:
 
 - `route` — one of A, B, C, D, E, NONE.
@@ -112,10 +112,22 @@ Five kinds of case, all of which matter:
 - **Portability** (m01–m03) — the artifact targets more than one model family, so
   the route is right only if `portability.md` loads with it. m02 is the one that
   matters: deletion inverts to the intersection of what is safe across models, and
-  a skill that misses it gives confidently wrong advice. **Currently the weakest
-  group** — m02 and m03 both misroute. Unfixed, and the first thing to work on.
+  a skill that misses it gives confidently wrong advice.
 - **Gap** (a05, b05) — triggers the description promises that the routing table
   did not cover. Both misrouted until the table rows were widened to match.
+- **Held out** (h01–h10) — written *after* the routing changes were finished and
+  never tuned against, to size the train–test gap. On them the change measured
+  80% → 90% while the tuned set measured 98%. That ~8-point gap is the honest cost
+  of five rounds against one case set, and it is why they are labelled.
+
+**h01–h10 are now burned.** They are in the file, so the next person editing this
+skill is training on them. Mine ten fresh ones from real sessions before the next
+change and hold *those* back; a held-out set is a consumable, not a fixture.
+
+Known miss: **h03** ("we're on GPT-5.6 and Claude Sonnet 5, should we keep the
+'be concise' instruction?") routes to B, should be E. It is a deletion decision
+wearing cross-model clothing. Left unfixed on purpose — it was the only holdout
+failure, and tuning it away would have meant tuning on the holdout.
 
 **Replace these with your own.** Cases drawn from real requests beat invented
 ones, because invented cases encode the author's theory of what users say rather

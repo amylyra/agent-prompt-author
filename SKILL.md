@@ -46,7 +46,13 @@ Match the request, then read **only** that route's file.
 
 Length routes to A, not B. Line count is a rule-count problem, and Route A step 2 measures it — no eval set required.
 
-Read `references/portability.md` when the artifact targets more than one model family.
+**A cross-model symptom is a modifier, not a route.** "Works on Claude, not on
+GPT" reads like non-compliance and pulls toward A. It usually isn't. Route on
+what they are asking to do — delete a rule is E, optimize or explain a score
+drop is B, write something new is D — then read `references/portability.md`
+alongside that route, because several of its rules invert. A bare behaviour
+difference with no ask attached is B: you cannot tell whether the prompt is the
+bottleneck on either model until you have measured on both.
 Read `references/evidence.md` only when a user challenges a claim or asks for sources.
 
 ## Route C — wrong artifact class

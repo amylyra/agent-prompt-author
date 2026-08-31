@@ -52,7 +52,7 @@ def run(mod, cases, cands, effect, winner, seed):
     """Stub the model: `winner` scores `effect` higher, everything else is a coin flip."""
     sys.argv = ["headroom_test.py", "--cases", cases, "--candidates", cands, "--runs", "3"]
     random.seed(seed)
-    mod.run_case = lambda client, model, system, case: (
+    mod.run_case = lambda client, model, system, case, effort=None: (
         1.0 if random.random() < 0.5 + (effect if system and system == winner else 0.0) else 0.0)
     with contextlib.redirect_stdout(io.StringIO()):
         return mod.main()   # 0 = headroom found, 1 = flat

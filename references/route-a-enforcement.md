@@ -14,9 +14,11 @@ Compliance decays multiplicatively — at 95% per instruction, ten instructions 
 
 Fix by moving rules out of scope (path-scoped rule files, progressive disclosure into a tree), not by shortening the ones that remain. Length is a constraint; count is the objective. Compressing ten rules into five sentences manufactures ambiguity and changes nothing.
 
+`scripts/audit_prompt.py <file>` counts this for you, per scope, and exits non-zero when a scope is over budget. It needs no API key. It also flags the things steps 4 and 5 below look for — unmeasurable rules, meta-instructions, bans with no replacement, and rules that belong in a schema, an enum, or a hook — so run it before reading further rather than eyeballing the count.
+
 ## 3. Does it conflict?
 
-Check pairs **within the same scope only**. Pairwise across 200 rules produces a confident, wrong answer — scoping is what makes conflict detection tractable.
+Check pairs **within the same scope only**. Pairwise across 200 rules produces a confident, wrong answer — scoping is what makes conflict detection tractable. `scripts/audit_prompt.py <file> --conflicts` does exactly this pass, one scope at a time; it is the only part of that script that needs an API key.
 
 Conflicts rarely surface as errors. Models seldom recognize contradictions or ask for clarification, so a conflict shows up as drift: the rule holds sometimes. Intermittent compliance is the signature.
 
