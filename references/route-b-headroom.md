@@ -2,15 +2,34 @@
 
 **Run this before any optimization work, always.** Across 72 runs of six optimizers (APE, OPRO, EvoPrompt, PromptBreeder, DSPy-style bootstrap, and a risk-aware method) on Claude Haiku 4.5, 49% scored *below* zero-shot — binomial p = 0.91, indistinguishable from random.
 
+## Step 0 — classify the task. Free, and it decides most cases
+
+Optimization helps when the task needs an output format the model **can** produce but does not default to. That is a property of the task, readable before you have a single eval case.
+
+| Has headroom | Flat |
+|---|---|
+| Structured schemas, JSON, XML output | Free-form natural language |
+| Rubric-scored evaluation with fixed dimensions | Open-ended summarization |
+| Domain formatting conventions (citations, legal, clinical) | General question answering |
+| Classification into a non-obvious taxonomy | Conversational response |
+
+**If the task sits entirely in the right column, that is the finding.** Report a flat landscape and stop. You do not need cases to say so, and asking for 20 before answering a question you can already answer is how this route becomes a dead end nobody walks back from.
+
+In the source study, the one task where all six methods beat zero-shot required structured rubrics and JSON output — the model's default was unstructured prose, and closing that gap was worth 6.8 points. The three free-form tasks gained 1.1, 0.7, and 0.6 — all inside noise.
+
+Mechanism: instruction-tuning trains consistent outputs across diverse input phrasings, which compresses input style into a narrow output distribution and eliminates the phrasing-sensitivity optimization exploits.
+
+**If it sits in the left column, or straddles**, the structural read is suggestive and not a verdict. Measure.
+
 ## The headroom test
 
 **Cost:** ~$5, ~10 minutes. **Output:** a go/no-go on all downstream prompt work.
 
 ### Step 1 — assemble cases
 
-20 held-out cases the prompt has never been tuned against. Real inputs, real expected outputs. If the user has none, **that is the finding** — say so, and offer to build 20 as the highest-value available work. Everything downstream is unverifiable without them.
+20 held-out cases the prompt has never been tuned against. Real inputs, real expected outputs. If the user has none, offer to build 20 as the highest-value available work — for a left-column task it is the only thing that turns a guess into a measurement.
 
-**If they decline to build cases:** proceed in degraded mode. Say explicitly that you are working without ground truth, restrict yourself to Route A (layer and count problems are visible without evals), and refuse Route B's verdict. Do not substitute your own judgment for a measurement and present it as one.
+**If they decline:** proceed in degraded mode. Say explicitly that you are working without ground truth, restrict yourself to Route A (layer and count problems are visible without evals) and to the Step 0 read, and refuse Step 4's verdict. Do not substitute your own judgment for a measurement and present it as one.
 
 ### Step 2 — generate candidates
 
@@ -39,21 +58,6 @@ Run each candidate plus a zero-shot baseline across all 20 cases. Same model, sa
 | High variance, unstable ranking across repeats | Noise floor exceeds signal | Fix the eval set before optimizing anything |
 
 **Recalibrate the 2-point threshold against your own noise floor.** Run the zero-shot baseline three times; the spread between runs is your floor. A "gain" smaller than that spread is not a gain.
-
-## What predicts headroom: the "can but doesn't" pattern
-
-Optimization helps when the task needs an output format the model **can** produce but does not default to.
-
-| Has headroom | Flat |
-|---|---|
-| Structured schemas, JSON, XML output | Free-form natural language |
-| Rubric-scored evaluation with fixed dimensions | Open-ended summarization |
-| Domain formatting conventions (citations, legal, clinical) | General question answering |
-| Classification into a non-obvious taxonomy | Conversational response |
-
-In the source study, the one task where all six methods beat zero-shot required structured rubrics and JSON output — the model's default was unstructured prose, and closing that gap was worth 6.8 points. The three free-form tasks gained 1.1, 0.7, and 0.6 — all inside noise.
-
-Mechanism: instruction-tuning trains consistent outputs across diverse input phrasings, which compresses input style into a narrow output distribution and eliminates the phrasing-sensitivity optimization exploits.
 
 ## Before blaming the prompt
 

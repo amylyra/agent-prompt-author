@@ -23,15 +23,17 @@ except ImportError:
     sys.exit("pip install anthropic")
 
 SKILL = Path(__file__).resolve().parent.parent
-ROUTES = ["A", "B", "C", "D", "E", "PRECONDITION", "NONE"]
+ROUTES = ["A", "B", "C", "D", "E", "NONE"]
 
 PROBE = """You have the skill below available. A user sends the message in <request>.
 
-Answer with ONE line only, in exactly this form:
-ROUTE: <A|B|C|D|E|PRECONDITION|NONE>
+Answer with TWO lines only, in exactly this form:
+ROUTE: <A|B|C|D|E|NONE>
+ASK: <YES|NO>
 
-Use PRECONDITION if the skill requires the actual artifact before diagnosing
-and the user has not supplied it. Use NONE if the skill should not fire at all.
+ROUTE is which route the skill takes. NONE means the skill should not fire.
+ASK is whether the skill must request the artifact before it can give a finding.
+These are independent: a request can route cleanly and still need the artifact.
 
 <skill>
 {skill}
@@ -55,31 +57,41 @@ def cases():
 
 
 def probe(client, model, skill_text, case):
+    """Returns (route, ask). Two dimensions, because they are independent:
+    a request can route cleanly and still need the artifact before a finding."""
     try:
         r = client.messages.create(
             model=model, max_tokens=24,
             messages=[{"role": "user", "content": PROBE.format(skill=skill_text, req=case["input"])}],
         )
-        out = "".join(b.text for b in r.content if b.type == "text")
-        m = re.search(r"ROUTE:\s*([A-Z_]+)", out.upper())
-        return m.group(1) if m and m.group(1) in ROUTES else "UNPARSED"
+        out = "".join(b.text for b in r.content if b.type == "text").upper()
+        m = re.search(r"ROUTE:\s*([A-Z]+)", out)
+        a = re.search(r"ASK:\s*(YES|NO)", out)
+        return (m.group(1) if m and m.group(1) in ROUTES else "UNPARSED",
+                (a.group(1) == "YES") if a else None)
     except Exception as e:
         print(f"  {case['id']} failed: {e}", file=sys.stderr)
-        return "ERROR"
+        return ("ERROR", None)
 
 
 def run(client, model, skill_text, cs, workers=8):
     with ThreadPoolExecutor(max_workers=workers) as ex:
         got = list(ex.map(lambda c: probe(client, model, skill_text, c), cs))
-    results = {c["id"]: {"want": c["route"], "got": g, "ok": c["route"] == g}
-               for c, g in zip(cs, got)}
+    results = {}
+    for c, (route, ask) in zip(cs, got):
+        results[c["id"]] = {
+            "want": c["route"], "got": route,
+            "want_ask": c["ask"], "got_ask": ask,
+            "route_ok": c["route"] == route,
+            "ok": c["route"] == route and c["ask"] == ask,
+        }
     acc = 100.0 * sum(r["ok"] for r in results.values()) / len(results)
     return results, acc
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--model", default="claude-sonnet-4-6")
+    p.add_argument("--model", default="claude-sonnet-5")
     p.add_argument("--runs", type=int, default=3, help="repeats, to measure the noise floor")
     p.add_argument("--snapshot")
     p.add_argument("--compare")
@@ -88,7 +100,7 @@ def main():
 
     if not os.environ.get("ANTHROPIC_API_KEY"):
         sys.exit("set ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(max_retries=5)
     cs = cases()
     skill_text = load_skill()
 
@@ -121,7 +133,9 @@ def main():
         print(f"\n  misroutes ({len(misses)}), last run:")
         by_id = {c["id"]: c for c in cs}
         for k, v in misses.items():
-            print(f"    {k}  want {v['want']:<12} got {v['got']:<12} {by_id[k]['note'][:52]}")
+            ask = "" if v["route_ok"] else " "
+            print(f"    {k}  want {v['want']}/ask={v['want_ask']:<5} "
+                  f"got {v['got']}/ask={v['got_ask']}{ask}  {by_id[k]['note'][:44]}")
 
     if a.snapshot:
         json.dump({"mean": mean, "noise": noise, "results": last}, open(a.snapshot, "w"), indent=1)
