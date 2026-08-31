@@ -55,6 +55,19 @@ Measured on Claude 3.5. Re-verify against a current model before using 44% as a 
 | Iteration-5 peak; selecting agent most often picks 5, not the last | CC-GSEO-Bench, arXiv 2509.05607 |
 | 5–10 iterations, weakest dimension first, select by held-out validation | arXiv 2603.27440 |
 
+## Audit and current-generation scaffolding
+
+Route F's cut/keep lists. All read in full, August 2026 — these are the fastest-decaying
+claims in the skill because each one exists where a previous generation needed the opposite.
+
+| Claim | Source |
+|---|---|
+| Remove verification instructions and "double-check your answer" — Opus 5 verifies and self-corrects unprompted, and these compound into over-verification with no quality gain; scope expansion and delegation need explicit caps | Anthropic, "Prompting Claude Opus 5," platform docs **[full]** |
+| More literal instruction following — the model does not silently generalise an instruction from one item to another, so breadth must be stated; a qualitative bar ("only high-severity") is followed faithfully and drops findings, lowering measured recall without a capability loss; `temperature` / `top_p` / `top_k` return 400 | Anthropic, "Prompting Claude Sonnet 5," platform docs **[full]** |
+| Dial back anti-laziness prompting — instructions that fixed undertriggering now overtrigger; replace blanket defaults with conditional ones; a rule telling the model not to think increases internal-tag leakage; long inputs at the top with the query last is worth up to ~30% on multi-document inputs; 3–5 examples | Anthropic, "Prompting best practices," platform docs **[full]** |
+| `output_config.effort` defaults to `high` and is billed on thinking tokens as well as output | Anthropic, "Effort," platform docs **[full]** |
+| Invariant-versus-default test; the four scaffolding classes; the six-condition survival rule; the conflict taxonomy; the two-evaluator operationalization test | "A 2026 Framework for Auditing LLM Prompts," 31 Aug 2026 — a synthesis of the above plus current OpenAI guidance, not a primary source. Its structural tests are reasoning, not measurements; its quantitative claims trace to the rows above and to `portability.md` |
+
 ## Agent design
 
 | Claim | Source |

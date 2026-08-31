@@ -1,113 +1,151 @@
 # Route F — is this prompt structurally sound?
 
-For "review this prompt", "is this any good", "how much of this is still needed" —
-a standing artifact with no specific failure attached and no eval set in hand.
+For "review this", "is this any good", "how much of this is still needed" — a
+standing artifact with no specific failure attached and no eval set in hand.
 
 **This is a reading, not a measurement.** It tells you whether the prompt is built
 correctly. It cannot tell you whether it works: that is Route B, and it needs cases.
-Say which one you did. An audit that gets reported as a verdict on quality is the
-more damaging of the two mistakes available here.
+Say which one you did. An audit reported as a verdict on quality is the more damaging
+of the two mistakes available here.
 
-Do not run it as a checklist top to bottom. Read the prompt once, then answer the
-three questions in order. **Stop at the first one that fails** — a prompt with the
-wrong shape does not benefit from a scaffolding inventory.
+**Audit the system, not the file.** Behaviour comes from the model, runtime settings,
+the prompt, tool definitions, retrieved context, history and memory together. The
+tool that fires too often is usually an over-eager tool *description*; the objective
+lost at turn 30 is usually compaction. If the cause is outside the text, that is the
+finding — say so and stop, rather than auditing prose that was never the problem.
+
+## 0. Classify first, in one line
+
+Target model and reasoning mode; one-shot or long-horizon; tools none, read-only or
+side-effecting; cost of failure. A good prompt for a classifier is a bad prompt for an
+autonomous agent, and everything below is weighted by these answers.
 
 ## 1. Shape
 
-Is the thing organized so a rule can be found and followed?
+- **Rule count per scope**, counted where rules compete rather than per file. Over ~8
+  is the finding; Route A step 2 has the fix. Counting is a judgment call — a rule is
+  what the model must hold at once, not what the bullet points.
+- **Named sections**: role and outcome, success criteria, constraints, evidence and
+  authority boundaries, domain context, output contract. XML tags for Claude, Markdown
+  headers if it must also run elsewhere (`portability.md`).
+- **Long inputs at the top, the ask at the bottom.** Worth up to ~30% on
+  multi-document inputs, and free.
+- **Each behaviour specified in exactly one control plane.** Not just once in the
+  prompt — once across the prompt, the tool description, the wrapper and the parser.
+  Duplicate control planes drift apart and then conflict.
+- **Effort, verbosity and thinking depth are API parameters.** A prompt arguing with a
+  dial it also sets has a bug in it.
 
-- **Scopes, and rule count per scope.** Count live rules where they compete, not per
-  file. Over ~8 in one scope is the finding; see Route A step 2 for what to do about
-  it. Counting is the only mechanical part of this route, and it is still a judgment
-  call — "one rule" is what the model must hold at once, not what the bullet points.
-- **Sections are separated and named.** Background, instructions, tool guidance,
-  output contract. For Claude, XML tags with consistent descriptive names; Markdown
-  headers if the prompt must also run on another family (`portability.md`).
-- **Long inputs sit at the top, the ask at the bottom.** Documents above instructions
-  above the query. Worth up to ~30% on multi-document inputs, and it is free.
-- **Each instruction appears exactly once.** Restating a rule in three places was
-  correct for a weaker generation. Now it mostly creates a conflict surface.
-- **Effort, verbosity, and thinking depth are API parameters, not prose.** A prompt
-  that argues with a dial it also sets is a prompt with a bug in it.
+## 2. Invariants versus defaults
 
-## 2. Scaffolding
+The highest-yield question in this route, and the one most prompts have never asked:
 
-**The inversion worth understanding: current models need less behavioural
-scaffolding and more scope specification than the prompts written for them assume.**
-They got better at doing the work, so "try harder" instructions are now dead weight
-or actively harmful. They also got more literal, so "how far, how long, how much" —
-which used to be inferred — now has to be stated. Most audited prompts are wrong in
-both directions at once.
+> **If the user explicitly asks for the opposite, should the model still obey this?**
 
-**Cut on sight.** Each of these is named in current Anthropic model guidance as
-counterproductive on this generation, not merely unnecessary:
+Yes → invariant. No → default. Most prompts have quietly promoted every preference to
+a hard rule, then bolted on exceptions to walk it back:
 
-| Scaffolding | Why it goes |
+```
+Never use bullet points.  /  Use tables for comparison.
+Answer in prose.  /  If the user asks for a checklist, give a checklist.
+```
+
+That is an exception graph pretending to be a policy. One default replaces it: *default
+to prose; use tables, bullets or checklists where the task benefits or the user asks.*
+Collapsing an exception graph into a stated default is the single most common
+structural repair on this route.
+
+## 3. Scaffolding
+
+**The inversion worth understanding: current models need less behavioural scaffolding
+and more scope specification than the prompts written for them assume.** They got
+better at the work, so "try harder" instructions are dead weight or worse. They got
+more literal, so "how far, how long, how much" now has to be stated. Most audited
+prompts are wrong in both directions at once.
+
+Sort every rule into four classes:
+
+| Class | Treatment |
 |---|---|
-| "Include a verification step", "use a subagent to verify" | Opus 5 verifies unprompted. These compound into over-verification and cost tokens with no quality gain |
-| "Double-check your answer", "re-verify before responding" | Same compounding, on self-correction the model already does |
-| "Be thorough", "if in doubt use \[tool]", "default to \[tool]" | Anti-laziness prompting written for models that undertriggered. Now overtriggers. Replace blanket defaults with conditional ones — "use \[tool] when it would improve your understanding" |
-| "After every N tool calls, summarise progress" | The model narrates readily now. Remove it, then re-add a *cadence* description only if what you get is wrong |
-| Any rule telling the model not to think or not to reason | Measurably increases internal-tag leakage. Strictly harmful |
-| Prefilled assistant turns, `budget_tokens`, `temperature` on Sonnet 5 | Not scaffolding any more — these are removed or return 400 |
+| **Product invariant** — required regardless of which model runs it | Keep |
+| **Model compensation** — added because a model failed without it | Keep *only while measured*. Re-test on every upgrade |
+| **Redundant reinforcement** — restates behaviour already encoded | Merge or delete |
+| **Speculative guard** — protects against a failure never observed | Usually delete, but flag rather than cut if no eval samples it |
 
-**Keep, and add if missing.** These target failures the current generation actually
-has:
+Model compensation is where the debt sits, and current Anthropic guidance names the
+families that have gone stale on this generation — counterproductive now, not merely
+unnecessary:
 
-| Scaffolding | Why it stays |
-|---|---|
-| Scope limits — deliver what was asked, don't widen or transform it | Current models expand scope and over-engineer without it |
-| Response and deliverable length | Effort controls thinking, not visible output. Length has to be prompted |
-| Delegation caps — when a subagent is worth it, and how many | Delegation is readier now and multiplies cost on small tasks |
-| Explicit breadth on any rule meant to generalise | Literal following means "apply to every section, not just the first" is now load-bearing |
-| A concrete bar wherever the prompt says "important" or "high-severity" | A qualitative bar gets followed faithfully and silently drops work. Name the threshold |
-| Domain knowledge and hard-won edge cases | Never scaffolding. This is the content |
+- "Include a verification step", "use a subagent to verify", "double-check your
+  answer" — Opus 5 verifies and self-corrects unprompted. These compound
+- "Be thorough", "if in doubt use \[tool]", "default to \[tool]" — written for models
+  that undertriggered. Make blanket defaults conditional
+- "After every N tool calls, summarise progress" — the model narrates readily now
+- Any rule telling the model not to think — measurably increases tag leakage
+- Prefilled turns, `budget_tokens`, `temperature` on Sonnet 5 — removed or 400 now
 
-For anything not on either list, the test is Route E's: **would this rule have
-prevented a real, observed mistake?** Check session history, not intuition. If no,
-flag it — do not auto-delete. Under a portability constraint the test inverts to the
-intersection across models; see `portability.md`.
+And what this generation needs that older ones inferred: scope limits, explicit output
+and deliverable length, delegation caps, explicit breadth on any rule meant to
+generalise ("every section, not just the first"), and a concrete threshold anywhere the
+prompt says "important" or "high-severity" — a qualitative bar now gets followed
+faithfully and silently drops work.
 
-## 3. Coherence
+**A rule survives if any one of these holds.** Otherwise the default is suspicion:
 
-Only now, and only within a scope — pairwise across a whole file produces a
-confident, wrong answer.
+1. It is a genuine product invariant.
+2. Removing it measurably worsens a representative eval.
+3. It defines a non-obvious authority, safety, evidence or side-effect boundary.
+4. It supplies domain context the model cannot infer.
+5. A downstream consumer requires that output shape.
+6. It resolves a real ambiguity between otherwise-valid behaviours.
 
-- **Two rules constraining one dimension in opposite directions.** "Be concise" and
-  "explain your reasoning fully" is the canonical pair. Conflicts rarely surface as
-  errors; they surface as a rule that holds sometimes. Intermittent compliance is the
-  signature.
-- **A general rule and an exception that never names it.**
-- **Rules that are requests for a quality rather than a checkable property.**
-  "Sound natural", "use good judgment", "high quality". Name a token or a threshold,
-  or move it to a rubric with a verifier.
-- **Bans with no replacement.** The gap is where invented behaviour comes from. Prefer
-  showing the wanted behaviour over stating the unwanted one — positive examples beat
-  negative instructions on current models.
-- **Rules that should not be prose at all.** Walk Route A's layer ladder. A format
-  rule belongs in a schema, a fixed vocabulary in an enum, a tool-choice rule in the
-  tool description, a hard gate in a hook.
-- **Examples.** 3–5, relevant and diverse, wrapped so they are distinguishable from
-  instructions. A laundry list of edge cases constrains the model to the space it
-  demonstrates.
+Asymmetric on purpose. Adding a rule costs attention, interacts with every other rule,
+becomes maintenance surface, and may be obsolete at the next upgrade. Under a
+portability constraint the deletion test inverts to the intersection across models
+(`portability.md`).
+
+## 4. Coherence
+
+Within a scope only — pairwise across a whole file produces a confident, wrong answer.
+Conflicts rarely surface as errors; they surface as a rule that holds *sometimes*.
+Intermittent compliance is the signature.
+
+- **Direct contradiction.** Both cannot be satisfied on some real input.
+- **Priority ambiguity.** "Be concise" and "be comprehensive" are not contradictory —
+  they just never say what gets sacrificed first. Name what survives the cut.
+- **Resource conflict.** Under 100 words, *and* reasoning, three examples, sources and
+  caveats. Two reasonable rules competing for one budget.
+- **Autonomy collision.** "Default to action" against "never modify without approval".
+  Current agentic models are the most sensitive to this class.
+- **Epistemic collision.** "Take a position", "never speculate", "always answer". The
+  missing rule is how to behave under genuine uncertainty.
+- **Exception inversion.** A narrow exception written strongly enough to override the
+  general policy everywhere.
+- **Unobservable rules.** *Could two competent evaluators independently decide whether
+  this was followed?* If not, rewrite it or demote it to an aspiration. "Be insightful"
+  fails; "if the user's premise is materially questionable, test it before solving the
+  downstream problem" passes.
+- **Wrong layer.** Walk Route A's ladder — schema, enum, tool description, hook.
+  Prompting around a schema or around a permission boundary are both this.
+- **Examples added as cargo cult.** They cost context and narrow behaviour to the
+  space they demonstrate. Route D rule 5 has the bar they have to clear.
 
 ## Report
 
-Use the standard output contract. Two additions specific to this route:
+Standard output contract, with two additions:
 
-- **Lead with the count.** Rules per scope against the budget, before any prose. It is
-  the finding that most often makes the rest moot.
-- **Separate "obsolete" from "unverified".** A guardrail you can show is obsolete is a
-  DELETA; one that merely looks obsolete is UNVERIFIED with the reason. On a prompt
-  nobody has evals for, most of the interesting findings are the second kind, and
-  reporting them as the first is how an audit does damage.
+- **Lead with the count** — rules per scope against the budget. It most often makes the
+  rest moot.
+- **Separate obsolete from unverified.** A guardrail you can *show* is obsolete is a
+  REMOVED; one that merely looks obsolete is UNVERIFIED with the reason. On a prompt
+  with no evals most findings are the second kind, and reporting them as the first is
+  how an audit does damage.
 
-Close by naming what this did not cover: whether the prompt works. If they want that,
-they are going to Route B and they are going to need 20 cases.
+Then say plainly that you did not test it, and that Route B needs 20 cases.
 
 ---
 
-*Scaffolding lists are dated: August 2026, against Claude Opus 5 / Sonnet 5 guidance.
-They are the fastest-decaying content in this skill — every one of these entries exists
-because a previous generation needed the opposite. Re-read the current model guidance
+*The scaffolding lists are dated — August 2026, against Claude Opus 5 / Sonnet 5
+guidance — and are the fastest-decaying content in this skill. Every entry exists
+because a previous generation needed the opposite. Re-read current model guidance
 before trusting the table.*
