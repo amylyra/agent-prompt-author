@@ -79,7 +79,7 @@ reliably has headroom.
 
 ## The case set
 
-`routing.jsonl` — 24 cases across four kinds. All four kinds matter:
+`routing.jsonl` — 27 cases across five kinds. All five kinds matter:
 
 - **Canonical** (a01–e03) — unambiguous cases for each route. Catch gross breakage.
 - **Ambiguous** (x01–x03) — cases where two or three routes are defensible. These
@@ -89,6 +89,10 @@ reliably has headroom.
   skill was written to prevent.
 - **Negative** (n01–n03) — the skill should not fire. Without these, you optimize
   toward a skill that fires on everything.
+- **Portability** (m01–m03) — the artifact targets more than one model family, so
+  the route is right only if `portability.md` loads with it. m02 is the one that
+  matters: deletion inverts to the intersection of what is safe across models, and
+  a skill that misses it gives confidently wrong advice.
 
 **Replace these with your own.** Cases drawn from real requests beat invented
 ones, because invented cases encode the author's theory of what users say rather
