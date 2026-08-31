@@ -1,0 +1,15 @@
+{
+  "name": "agent-prompt-author",
+  "displayName": "Agent Prompt Author",
+  "description": "Write, revise, and diagnose system prompts and harnesses for LLM agents. Routes to a diagnostic before writing: whether the prompt is the bottleneck at all, whether the rule is in a layer that can enforce it, whether it was written for a model generation that no longer exists. Ships eval harnesses for its own routing and its own findings.",
+  "version": "0.2.0",
+  "author": {
+    "name": "Amy Yuan",
+    "url": "https://github.com/amylyra"
+  },
+  "homepage": "https://www.amyzyuan.com/thoughts/prompt-engineering-best-practices-2026",
+  "repository": "https://github.com/amylyra/agent-prompt-author",
+  "license": "MIT",
+  "keywords": ["prompt-engineering", "agents", "system-prompt", "evals", "context-engineering", "prompt-audit"],
+  "skills": ["./"]
+}
