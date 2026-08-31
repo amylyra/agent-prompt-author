@@ -1,0 +1,6 @@
+{"id": "g01", "route": "F", "ask": true, "input": "Take a look at our support agent prompt and tell me what you think.", "note": "HOLDOUT: audit, phrased casually"}
+{"id": "g02", "route": "F", "ask": true, "input": "Which of the rules in this prompt are still earning their place?", "note": "HOLDOUT: audit \u2014 scaffolding inventory across the whole file, not one rule"}
+{"id": "g03", "route": "F", "ask": true, "input": "Audit this prompt for structural problems.", "note": "HOLDOUT: audit, named directly"}
+{"id": "g04", "route": "B", "ask": true, "input": "Our eval score dropped 6 points after the model upgrade.", "note": "HOLDOUT: they have cases and a number \u2014 headroom, not audit"}
+{"id": "g05", "route": "D", "ask": false, "input": "Write a subagent prompt for log triage.", "note": "HOLDOUT: control \u2014 authoring must be unaffected by adding F"}
+{"id": "g06", "route": "A", "ask": true, "input": "It keeps ignoring the rule about not editing generated files.", "note": "HOLDOUT: control \u2014 enforcement must not drift to F"}

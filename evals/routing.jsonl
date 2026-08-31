@@ -26,4 +26,17 @@
 {"id": "m02", "route": "E", "ask": true, "input": "This rule is dead weight on Claude now, can I delete it? We also run GPT-5.6.", "note": "PORTABILITY: E, must apply the intersection inversion, not delete on one model's evidence"}
 {"id": "m03", "route": "B", "ask": true, "input": "We optimized the prompt on Claude and scores dropped on GPT. What happened?", "note": "PORTABILITY: B, cross-model non-transfer; must not recommend re-optimizing on one model"}
 {"id": "a05", "route": "A", "ask": true, "input": "This system prompt is 240 lines now. Where do I start?", "note": "GAP: the ~200-line trigger in the description had no table row; length is a count problem, so A"}
-{"id": "b05", "route": "B", "ask": true, "input": "Review this agent prompt.", "note": "GAP: 'review this agent prompt' is a description trigger that had no table row"}
+{"id": "b05", "route": "F", "ask": true, "input": "Review this agent prompt.", "note": "was labelled B; reviewing a standing artifact with no eval set is an audit, and B could not have answered it"}
+{"id": "h01", "route": "A", "ask": true, "input": "Our support agent sometimes answers in Spanish even though the prompt says English only.", "note": "HOLDOUT: plain enforcement"}
+{"id": "h02", "route": "D", "ask": false, "input": "I want to write the prompt for a subagent that summarizes PDFs.", "note": "HOLDOUT: authoring, no artifact exists"}
+{"id": "h03", "route": "E", "ask": true, "input": "We're on GPT-5.6 and Claude Sonnet 5. Should we keep the 'be concise' instruction?", "note": "HOLDOUT: deletion decision under portability -> E, intersection rule"}
+{"id": "h04", "route": "C", "ask": false, "input": "Our CLAUDE.md keeps getting ignored by the team's agents.", "note": "HOLDOUT: context file, wrong artifact class"}
+{"id": "h05", "route": "B", "ask": true, "input": "Can you make this orchestrator prompt better?", "note": "HOLDOUT: improve with no specific failure"}
+{"id": "h06", "route": "E", "ask": true, "input": "Every time I tweak the prompt, a different eval case fails.", "note": "HOLDOUT: retrospective capability decay -> revision"}
+{"id": "h07", "route": "NONE", "ask": false, "input": "What temperature should I use for classification?", "note": "HOLDOUT: not a prompt-authoring question"}
+{"id": "h08", "route": "A", "ask": true, "input": "The agent calls the wrong tool about a third of the time.", "note": "HOLDOUT: enforcement, and the layer answer is the tool description"}
+{"id": "h09", "route": "D", "ask": false, "input": "Write a tool description for a Postgres query function.", "note": "HOLDOUT: authoring a tool description"}
+{"id": "h10", "route": "B", "ask": true, "input": "Same prompt, different results on Haiku vs Sonnet. Confused.", "note": "HOLDOUT: bare cross-model behaviour difference, no verb"}
+{"id": "f01", "route": "F", "ask": true, "input": "Is this system prompt any good?", "note": "AUDIT: quality question with no specific failure and no eval set"}
+{"id": "f02", "route": "F", "ask": true, "input": "How much of this orchestrator prompt is still needed?", "note": "AUDIT: scaffolding inventory \u2014 the obsolete-guardrail question without a named failure"}
+{"id": "f03", "route": "F", "ask": true, "input": "We inherited this agent prompt from a contractor. Can you go through it?", "note": "AUDIT: no failure, no cases, wants a structural read"}

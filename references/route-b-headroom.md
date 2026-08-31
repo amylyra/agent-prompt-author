@@ -23,7 +23,28 @@ Mechanism: instruction-tuning trains consistent outputs across diverse input phr
 
 ## The headroom test
 
-**Cost:** ~$5, ~10 minutes. **Output:** a go/no-go on all downstream prompt work.
+**Output:** a go/no-go on all downstream prompt work.
+
+**Cost:** quote it from the run you are about to do, not from a remembered number.
+
+```
+calls = cases x (runs + candidates + confirm x runs)
+      = 20   x (3    + 15         + 3       x 3   )  =  540
+```
+
+At Sonnet 5 list price ($2/$10 per MTok), a 1,500-token prompt and a 300-token
+case, that is roughly **$2 at `effort: low` and $5 at the `high` default** —
+because effort is charged on thinking tokens too, and high effort on a
+short-output scoring call is close to pure waste. Wall clock at 8 workers is
+about 4 minutes low, 11 high.
+
+Three things move this by more than a factor of two, so re-derive rather than
+quote: the size of the prompt under test, the candidate count, and the effort
+level. `scripts/headroom_test.py --effort low` is the right default for
+screening; raise it only if you have evidence the ranking changes.
+
+Do not confuse this with the source study's **$80 coupling pre-test** further
+down — different protocol, different bill.
 
 ### Step 1 — assemble cases
 
